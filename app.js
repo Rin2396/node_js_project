@@ -3,7 +3,15 @@ const { Pool } = require('pg');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
+
+const swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+
+
 
 
 const app = express();
@@ -17,8 +25,12 @@ const pool = new Pool({
   password: 'test123',
   port: 5432,
 });
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(bodyParser.json());
+app.get('/openapi.yaml', (req, res) => {
+  res.sendFile(path.join(__dirname, 'openapi.yaml'));
+});
 
 // Middleware to handle errors
 function errorHandler(err, req, res, next) {
@@ -150,6 +162,7 @@ app.post('/api/memes', auth, async (req, res, next) => {
 });
 
 app.use(errorHandler);
+//app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(port, () => {
   console.log(`Meme app listening on port ${port}`);

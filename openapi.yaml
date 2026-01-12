@@ -1,0 +1,170 @@
+openapi: 3.0.0
+info:
+  title: Meme API
+  version: 1.0.0
+  description: API Documentation for Meme App
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request - missing fields or username taken
+
+  /api/auth/login:
+    post:
+      summary: Authenticate and get a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+        '400':
+          description: Invalid username or password
+
+  /api/memes:
+    get:
+      summary: Get all memes (authorization required)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of memes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meme'
+    post:
+      summary: Create a new meme (authorization required)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemeInput'
+      responses:
+        '201':
+          description: Meme created
+
+  /api/memes/{id}:
+    get:
+      summary: Get meme by ID (authorization required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Meme ID
+      responses:
+        '200':
+          description: Meme found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meme'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Meme not found
+
+  /api/memes/random:
+    get:
+      summary: Get random meme (authorization required)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Random meme
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meme'
+        '401':
+          description: Unauthorized
+        '404':
+          description: No memes found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Meme:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    MemeInput:
+      type: object
+      required:
+        - title
+        - imageUrl
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 300
+        imageUrl:
+          type: string
